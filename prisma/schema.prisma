@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ResearchSubmission {
+  id           String           @id @default(cuid())
+  fullName     String
+  email        String
+  phoneNumber  String
+  fileUrl      String
+  filePublicId String
+  fileName     String
+  fileType     String
+  fileSize     Int
+  status       SubmissionStatus @default(SUBMITTED)
+  // Populated only when status becomes PUBLISHED. Unique so it can be used in /research/[slug].
+  slug         String?          @unique
+  // Optional metadata an admin can fill in during review, since the public
+  // submission form intentionally only collects name/email/phone/file.
+  title        String?
+  abstractText String?          @db.Text
+  category     String?
+  keywords     String[]         @default([])
+  submittedAt  DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  publishedAt  DateTime?
+
+  @@index([status])
+  @@index([submittedAt])
+}
